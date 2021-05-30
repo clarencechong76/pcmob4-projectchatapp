@@ -10,23 +10,12 @@ import {
 import firebase from "../database/firebaseDB";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { GiftedChat } from "react-native-gifted-chat";
-
 const db = firebase.firestore().collection("messages");
 const auth = firebase.auth();
-
 export default function ChatScreen({ navigation }) {
   const [messages, setMessages] = useState([]);
-
   useEffect(() => {
-    // This is the listener for authentication
-    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
-      if (user) {
-        navigation.navigate("Chat");
-      } else {
-        navigation.navigate("Login");
-      }
-    });
-
+   
     // This sets up the top right button
     navigation.setOptions({
       headerRight: () => (
@@ -40,51 +29,6 @@ export default function ChatScreen({ navigation }) {
         </TouchableOpacity>
       ),
     });
-
-    export function Example() {
-        const [messages, setMessages] = useState([]);
-      
-        useEffect(() => {
-          setMessages([
-            {
-              _id: 1,
-              text: 'Hello developer',
-              createdAt: new Date(),
-              user: {
-                _id: 2,
-                name: 'React Native',
-                avatar: 'https://placeimg.com/140/140/any',
-              },
-            },
-          ])
-        }, [])
-      
-        const onSend = useCallback((messages = []) => {
-          setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
-        }, [])
-      
-        return (
-          <GiftedChat
-            messages={messages}
-            onSend={messages => onSend(messages)}
-            user={{
-              _id: 1,
-            }}
-          />
-        )
-      }
-
-
-
-
-
-
-
-
-
-
-
-
     // This loads data from firebase
     const unsubscribeSnapshot = db
       .orderBy("createdAt", "desc")
@@ -100,37 +44,52 @@ export default function ChatScreen({ navigation }) {
         });
         setMessages(serverMessages);
       });
-
+       // This is the listener for authentication
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+        if (user) {
+          navigation.navigate("Chat");
+        } else {
+          navigation.navigate("Login");
+        }
+      });
+      
     return () => {
       unsubscribeAuth();
       unsubscribeSnapshot();
     };
   }, []);
-
   function logout() {
     auth.signOut();
   }
-
   function sendMessages(newMessages) {
     console.log(newMessages);
     const newMessage = newMessages[0];
     db.add(newMessage);
     //setMessages([...newMessages, ...messages]);
   }
-
+if (firebase.auth().currentUser) {
   return (
     <GiftedChat
       messages={messages}
       onSend={(newMessages) => sendMessages(newMessages)}
-      renderUsernameOnMessage={true}
-      listViewProps={{
-        style: {
-          backgroundColor: "#666",
-        },
-      }}
       user={{
-        _id: 1,
-      }}
+        _id: firebase.auth().currentUser.uid,
+        name: firebase.auth().currentUser.email,
+        }}
     />
   );
+    } else {
+      return null;
+    }
 }
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#ffc",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+
+
+
